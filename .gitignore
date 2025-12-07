@@ -1,0 +1,26 @@
+# Build & output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.DS_Store
+
+# Local databases
+*.mdf
+*.ldf
+*.sqlite
+*.db
+
+# Secret configs
+appsettings.*.json
+
+# VS / IDE
+.vs/
+.idea/
+*.sln.docstates
+
+# Node / frontend
+node_modules/
+dist/
