@@ -322,3 +322,7 @@ canvas {
     background: #00ff99;
     width: 50%; /* will set dynamically in JS */
 }
+
+#logoutBtn {
+    margin-left: 100px; /* adjust the number for more or less space */
+}
