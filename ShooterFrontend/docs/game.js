@@ -53,8 +53,6 @@ async function startGame() {
     player.health = playerCharacter.health;
     // Load assets first
     await loadAssets();
-    gameLoop()
-
 }
 
 let characters = []; // Will store characters fetched from API
@@ -71,13 +69,13 @@ async function fetchCharacters() {
     }
 }
 
-function showHomeScreen() {
+async function showHomeScreen() {
     document.getElementById("homeScreen").style.display = "block";
     const characterListDiv = document.getElementById("characterList");
     characterListDiv.innerHTML = "";
 
-    fetchCharacters();
-    loadScoreCard();
+    await fetchCharacters();
+    await loadScoreCard();
 
     characters.forEach(char => {
         const card = document.createElement("div");
@@ -100,17 +98,7 @@ function showHomeScreen() {
         const hp = document.createElement("div");
         hp.textContent = `HP: ${char.health}`;
 
-        // // Attack
-        // const atk = document.createElement("div");
-        // atk.textContent = `ATK: ${char.attack}`;
-
-        // // Speed
-        // const spd = document.createElement("div");
-        // spd.textContent = `SPD: ${char.speed}`;
-
         stats.appendChild(hp);
-        // stats.appendChild(atk);
-        // stats.appendChild(spd);
         card.appendChild(stats);
 
         card.addEventListener("click", () => {
@@ -368,6 +356,7 @@ async function loadingLoop() {
 
     if (playerImg && fishMonster && snakeMonster && lizardMonster && bgImg && portalImg) {
         initGame();
+        gameLoop();
     } else {
         requestAnimationFrame(loadingLoop);
     }
