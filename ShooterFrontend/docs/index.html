@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ShootERS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- TOP BAR / HUD -->
+    <div id="topBar">
+        <h1 class="title">ShootERS</h1>
+        <div class="hud">
+            <span>💰 Score: <span id="score">0</span></span>
+            <span>❤️ HP: <span id="playerHealth">100</span></span>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <!-- HOME SCREEN -->
+    <div class="home-screen" id="homeScreen">
+        <h2>Choose Your Character</h2>
+        <div class="character-list" id="characterList">
+            <!-- Characters inserted dynamically -->
+        </div>
+        <button class="btn-start" id="startGameBtn" disabled>Start Game</button>
+
+        <!-- LEADERBOARD -->
+        <div class="scorecard-container">
+            <table class="scorecard-table" id="scoreCard">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Username</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Scores will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CANVAS -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- AUTH MODAL -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <h2>Login / Register</h2>
+
+            <form id="loginForm" class="modal-form">
+                <input type="text" id="loginUsername" placeholder="Username" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button type="submit" class="btn-login">Login</button>
+            </form>
+
+            <form id="registerForm" class="modal-form">
+                <input type="text" id="registerUsername" placeholder="Username" required>
+                <input type="email" id="registerEmail" placeholder="Email" required>
+                <input type="password" id="registerPassword" placeholder="Password" required>
+                <button type="submit" class="btn-register">Register</button>
+            </form>
+
+            <div class="auth-error" id="authError"></div>
+        </div>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div class="game-over-screen" id="gameOverScreen">
+        <h2>GAME OVER</h2>
+        <p>Your Score: <span id="finalScore">0</span></p>
+        <button class="btn-restart" id="restartBtn">Restart</button>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
