@@ -1,20 +1,20 @@
 # ShootERS
 
-![alt text](image.png)
+![alt text](demo/image.png)
 
-![alt text](image-2.png)
+![alt text](demo/image-2.png)
 
-![alt text](image-1.png)
+![alt text](demo/image-1.png)
 
-![alt text](image-3.png)
+![alt text](demo/image-3.png)
 
-![alt text](image-4.png)
+![alt text](demo/image-4.png)
 
-![alt text](image-5.png)
+![alt text](demo/image-5.png)
 
-![alt text](image-6.png)
+![alt text](demo/image-6.png)
 
-![alt text](image-7.png)
+![alt text](demo/image-7.png)
 
 **ShootERS** is a fast-paced browser-based 2D shooter game where the player battles waves of enemies, navigates portals, collects power-ups, and faces a formidable final boss. The game is built using vanilla JavaScript and HTML5 Canvas, featuring dynamic enemy behavior, collectible items, and a scoring system.
 
