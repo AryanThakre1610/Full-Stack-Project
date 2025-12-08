@@ -16,5 +16,6 @@ namespace ShooterBackend.Models
 
         public int RoleId { get; set; }
         public Role Role { get; set; }
+        public int Cash { get; set; } = 1000;
     }
 }

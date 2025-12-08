@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShooterBackend.Data;
 
@@ -11,9 +12,11 @@ using ShooterBackend.Data;
 namespace ShooterBackend.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    partial class GameDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251207210622_AddCategoryItemsAndUserCash")]
+    partial class AddCategoryItemsAndUserCash
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -161,17 +164,10 @@ namespace ShooterBackend.Migrations
                 {
                     b.HasBaseType("ShooterBackend.Models.Item");
 
-                    b.Property<int>("Damage")
-                        .HasColumnType("int");
-
                     b.Property<int>("Duration")
                         .HasColumnType("int");
 
                     b.Property<string>("Effect")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Rarity")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -188,15 +184,6 @@ namespace ShooterBackend.Migrations
                     b.Property<string>("Rarity")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.ToTable("Items", t =>
-                        {
-                            t.Property("Damage")
-                                .HasColumnName("Weapon_Damage");
-
-                            t.Property("Rarity")
-                                .HasColumnName("Weapon_Rarity");
-                        });
 
                     b.HasDiscriminator().HasValue("Weapon");
                 });

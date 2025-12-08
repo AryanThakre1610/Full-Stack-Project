@@ -2,12 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShooterBackend.Data;
 using ShooterBackend.Models;
+using ShooterBackend.DTOs;
 
 namespace ShooterBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Microsoft.AspNetCore.Authorization.Authorize]
+    // [Microsoft.AspNetCore.Authorization.Authorize]
     public class ItemsController : ControllerBase
     {
         private readonly GameDbContext _context;
@@ -18,10 +19,49 @@ namespace ShooterBackend.Controllers
         }
 
         // GET: api/items
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Item>>> GetItems()
+        [HttpGet("powerups")]
+        public async Task<ActionResult<IEnumerable<ItemDto>>> GetPowerUps()
         {
-            return await _context.Items.ToListAsync();
+            // Fetch each derived type separately
+            var powerUps = await _context.Items.OfType<PowerUp>().ToListAsync();
+
+            var powerUpDtos = powerUps.Select(p => new PowerUpDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Power = p.Power,
+                Value = p.Value,
+                Type = "PowerUp",
+                Effect = p.Effect,
+                Duration = p.Duration,
+                Damage = p.Damage,
+                Rarity = p.Rarity
+            });
+
+            return Ok(powerUpDtos);
+        }
+
+        // GET: api/items
+        [HttpGet("weapons")]
+        public async Task<ActionResult<IEnumerable<ItemDto>>> GetWeapons()
+        {
+            // Fetch each derived type separately
+            var weapons = await _context.Items.OfType<Weapon>().ToListAsync();
+
+            // Map to DTOs
+            var weaponDtos = weapons.Select(w => new WeaponDto
+            {
+                Id = w.Id,
+                Name = w.Name,
+                Power = w.Power,
+                Value = w.Value,
+                Type = "Weapon",
+                Damage = w.Damage,
+                Rarity = w.Rarity
+                // CharacterId = w.CharacterId
+            });
+
+            return Ok(weaponDtos);
         }
 
         // GET: api/items/5
@@ -138,3 +178,4 @@ namespace ShooterBackend.Controllers
         }
     }
 }
+

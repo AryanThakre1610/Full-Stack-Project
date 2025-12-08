@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using ShooterBackend.Data;
 using ShooterBackend.Models;
+using ShooterBackend.DTOs;
 
 namespace ShooterBackend.Controllers
 {
@@ -23,8 +24,35 @@ namespace ShooterBackend.Controllers
         {
             // Include Inventory and optionally selected Weapon
             return await _context.Characters
-                .Include(c => c.Inventory) // include items in inventory
-                .ToListAsync();
+                    .ToListAsync();
+        }
+
+        // GET: api/characters/{id}/inventory
+        [HttpGet("{id}/inventory")]
+        public async Task<ActionResult<IEnumerable<ItemDto>>> GetInventory(int id)
+        {
+            var character = await _context.Characters
+                .Include(c => c.Inventory)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (character == null) return NotFound();
+
+            // Map to DTOs
+            var inventory = character.Inventory.Select(item => item switch
+            {
+                Weapon w => new WeaponDto
+                {
+                    Id = w.Id,
+                    Name = w.Name,
+                    Power = w.Power,
+                    Value = w.Value,
+                    Type = "Weapon",
+                    Damage = w.Damage,
+                    Rarity = w.Rarity
+                }
+            }).ToList();
+
+            return Ok(inventory);
         }
 
         // GET: api/characters/5
@@ -40,16 +68,6 @@ namespace ShooterBackend.Controllers
 
             return character;
         }
-
-        // [HttpGet("characters")]
-        // public IActionResult GetAllCharacters()
-        // {
-        //     var characters = _context.Characters
-        //         .Select(c => new { c.Id, c.Name, c.Level, c.Health })
-        //         .ToList();
-
-        //     return Ok(characters);
-        // }
 
         // POST: api/characters
         [Authorize]
@@ -99,19 +117,6 @@ namespace ShooterBackend.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        // Optional: Get only character inventory
-        [HttpGet("{id}/inventory")]
-        public async Task<ActionResult<IEnumerable<Item>>> GetCharacterInventory(int id)
-        {
-            var character = await _context.Characters
-                .Include(c => c.Inventory)
-                .FirstOrDefaultAsync(c => c.Id == id);
-
-            if (character == null) return NotFound();
-
-            return Ok(character.Inventory);
         }
     }
 }

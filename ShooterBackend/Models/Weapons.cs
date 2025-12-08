@@ -1,14 +1,15 @@
+using System.ComponentModel;
+
 namespace ShooterBackend.Models
 {
     public class Weapon : Item
     {
         public int Damage { get; set; }
         public string Rarity { get; set; }
-
         public Weapon() : base() { }
 
         public Weapon(string name, int power, double value, int damage, string rarity)
-            : base(name, "Weapon", power, value)
+            : base(name, power, value)
         {
             Damage = damage;
             Rarity = rarity;
