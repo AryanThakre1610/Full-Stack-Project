@@ -50,18 +50,27 @@ async function startGame() {
         return;
     }
 
-    player.health = playerCharacter.health;
+    // player.health = playerCharacter.health;
     // Load assets first
     await loadAssets();
 }
 
 let characters = []; // Will store characters fetched from API
+let items = []; // Will store items fetched from API
+let inventory = []; // Will store weapons for selected character
+const inventoryModal = document.getElementById("inventoryModal");
+const inventoryList = document.getElementById("inventoryList");
+const rarities = {};
+const damageValues = {};
+const effectValues = {};
 
+// --------------------
+// Fetch Data Functions
+// --------------------
 async function fetchCharacters() {
     try {
-        const res = await fetch(`${API_BASE}/characters`); // Assuming this endpoint returns all characters
+        const res = await fetch(`${API_BASE}/characters`);
         if (!res.ok) throw new Error("Failed to fetch characters");
-
         characters = await res.json(); // Array of character objects
     } catch (err) {
         console.error(err);
@@ -69,55 +78,104 @@ async function fetchCharacters() {
     }
 }
 
+async function fetchPowerups() {
+    try {
+        const res = await fetch(`${API_BASE}/items/powerups`);
+        if (!res.ok) throw new Error("Failed to fetch power-ups");
+        items = await res.json();
+        console.log("Power-ups:", items);
+    } catch (err) {
+        console.error(err);
+        alert("Error fetching power-ups: " + err.message);
+    }
+}
+
+async function fetchInventory(characterId) {
+    try {
+        const response = await fetch(`${API_BASE}/characters/${characterId}/inventory`);
+        if (!response.ok) throw new Error("Failed to fetch inventory");
+        inventory = await response.json();
+        console.log("Inventory:", inventory);
+    } catch (err) {
+        console.error(err);
+        alert("Error fetching inventory: " + err.message);
+    }
+}
+
+// --------------------
+// Display Home Screen
+// --------------------
 async function showHomeScreen() {
     document.getElementById("homeScreen").style.display = "block";
     const characterListDiv = document.getElementById("characterList");
     characterListDiv.innerHTML = "";
 
     await fetchCharacters();
+    await fetchPowerups();
     await loadScoreCard();
 
     characters.forEach(char => {
         const card = document.createElement("div");
         card.classList.add("character-card");
 
-        // const img = document.createElement("div");
-        // img.classList.add("character-image");
-        // img.textContent = "🛡️"; // placeholder, can replace with actual image
-        // card.appendChild(img);
-
+        // Character Name
         const name = document.createElement("div");
         name.classList.add("character-name");
         name.textContent = char.name;
         card.appendChild(name);
 
+        // Character Stats
         const stats = document.createElement("div");
         stats.classList.add("character-stats");
-
-        // HP
-        const hp = document.createElement("div");
-        hp.textContent = `HP: ${char.health}`;
-
-        stats.appendChild(hp);
+        stats.innerHTML = `<div>LEVEL: ${char.level}</div><div>HP: ${char.health}</div>`;
         card.appendChild(stats);
 
+        // Card click - select character
         card.addEventListener("click", () => {
             playerCharacter = char;
             playerCharacterId = char.id;
+            fetchInventory(playerCharacterId);
 
-            Array.from(characterListDiv.children).forEach(c => c.classList.remove("selected"));
+            // Clear selection for all cards
+            document.querySelectorAll(".character-card").forEach(c => {
+                c.classList.remove("selected");
+                const btn = c.querySelector(".inventoryBtn");
+                if (btn) btn.remove();
+            });
+
             card.classList.add("selected");
-
             document.getElementById("startGameBtn").disabled = false;
+
+            // Add inventory button inside selected card
+            const inventoryBtn = document.createElement("button");
+            inventoryBtn.textContent = "Inventory";
+            inventoryBtn.classList.add("inventoryBtn");
+
+            inventoryBtn.addEventListener("click", async (e) => {
+                e.stopPropagation(); // Prevent card click from firing
+
+                // Populate modal with inventory items
+                inventoryList.innerHTML = inventory.map(item => `
+                    <div class="inventory-item">
+                        <strong>${item.name}</strong> (${item.type})<br>
+                        Power: ${item.power}, Value: ${item.value}
+                    </div>
+                `).join("");
+
+                inventoryModal.style.display = "flex";
+            });
+
+            card.appendChild(inventoryBtn);
         });
 
         characterListDiv.appendChild(card);
     });
 }
 
+// --------------------
+// Load Scorecard
+// --------------------
 async function loadScoreCard() {
-    // const token = localStorage.getItem("token"); // optional, if your API requires auth
-
     try {
         const response = await fetch(`${API_BASE}/scores`, {
             method: "GET",
@@ -132,12 +190,9 @@ async function loadScoreCard() {
             return;
         }
 
-        const scores = await response.json(); // assumes backend returns an array of {user:{username}, value}
+        const scores = await response.json(); // array of {user:{username}, value}
         const tbody = document.querySelector("#scoreCard tbody");
         tbody.innerHTML = ""; // clear previous rows
-
-        // // Sort scores descending by value
-        // scores.sort((a, b) => b.value - a.value);
 
         scores.forEach((score, index) => {
             const tr = document.createElement("tr");
@@ -154,6 +209,22 @@ async function loadScoreCard() {
     }
 }
 
+// --------------------
+// Modal Close Handlers
+// --------------------
+const modalClose = inventoryModal.querySelector(".close");
+
+modalClose.addEventListener("click", () => {
+    inventoryModal.style.display = "none";
+});
+
+window.addEventListener("click", (e) => {
+    if (e.target === inventoryModal) inventoryModal.style.display = "none";
+});
+
+// --------------------
+// Start Game Button
+// --------------------
 document.getElementById("startGameBtn").addEventListener("click", () => {
     if (!playerCharacterId) return;
     document.getElementById("homeScreen").style.display = "none";
@@ -182,6 +253,10 @@ function logout() {
 
 // Attach logout to button
 document.getElementById("logoutBtn").addEventListener("click", logout);
+
+document.getElementById("playerCash").addEventListener("click", logout);
+
+const playerCash = document.getElementById("playerCash");
 
 async function login(username, password) {
     try {
@@ -252,6 +327,50 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         );
     };
 
+}
+
+function setParams() {  
+    player.health = playerCharacter.health;
+    player.maxHealth = playerCharacter.health;
+
+    jsoninventory = inventory[0];
+    console.log(inventory[0])
+    weaponDamage = jsoninventory.power;
+    weaponValue = jsoninventory.value;
+    
+    for (let power of items) {
+        pname = power.name.toLowerCase();
+        rarities[pname] = power.rarity;
+        damageValues[pname] = power.damage;
+        effectValues[pname] = power.effect;
+    }
+
+    console.log(damageValues);
+    console.log(effectValues);
+}
+
+// Pick item weighted by rarity value (higher = more common)
+function pickWeightedItem(rarities) {
+    const items = Object.keys(rarities);
+    const weights = Object.values(rarities);
+
+    // Compute cumulative weights
+    const cumulative = [];
+    let sum = 0;
+    for (let w of weights) {
+        sum += w;
+        cumulative.push(sum);
+    }
+
+    // Pick a random number between 0 and sum
+    const rnd = Math.random() * sum;
+
+    // Find the first cumulative weight that exceeds rnd
+    for (let i = 0; i < cumulative.length; i++) {
+        if (rnd < cumulative[i]) return items[i];
+    }
+
+    return items[items.length - 1]; // fallback
 }
 
 
@@ -520,7 +639,8 @@ class Bullet {
         this.speed = 9;
         this.active = false;
         this.direction = "right";
-        this.damage = 25;
+        this.damage = weaponDamage;
+        console.log("Bullet damage set to:", this.damage);
     }
 
     activate(x, y, direction = "right") {
@@ -749,7 +869,6 @@ class Boss {
     }
 }
 
-
 class Collectable {
     constructor(type, x = null, y = null) {
         this.type = type;
@@ -795,34 +914,38 @@ class Collectable {
             this.y < player.y + player.height &&
             this.y + this.height > player.y
         ) {
-            this.applyEffect();
+            var effect = Number(effectValues[this.type])
+            var damage = damageValues[this.type]
+            this.applyEffect(effect,damage);
         }
     }
 
-    applyEffect() {
+    applyEffect(effect,damage) {
         switch(this.type) {
             case "health":
-                player.health = Math.min(player.maxHealth, player.health + 30);
+                console.log("Health effect:", effect);
+                player.health = Math.min(player.maxHealth, player.health + effect);
+                console.log("Health effect:", player.health);
                 break;
             case "berserk":
-                player.damage = 2; // double damage
-                player.health -= 5; // slight health cost
+                player.damage = damage; // double damage
+                player.health -= effect; // slight health cost
                 setTimeout(() => player.damage = 1, 10000); // lasts 10 seconds
                 break;
             case "score":
-                score += 50; 
+                score += effect; 
                 break;
             case "speed":
-                player.speed += 2; 
-                setTimeout(() => player.speed -= 2, 5000); // lasts 5 seconds
+                player.speed += effect; 
+                setTimeout(() => player.speed -= effect, 5000); // lasts 5 seconds
                 break;
             case "ignite":
                 for (let e of enemies) {
-                    e.health -= 10; // damage all enemies slightly
+                    e.health -= damage; // damage all enemies slightly
                 }
                 break;
             case "slowdown":
-                speedMultiplier = 0.5;
+                speedMultiplier = 1/damage;
                 setTimeout(() => {
                     speedMultiplier = 1;
                 }, 5000);
@@ -848,16 +971,19 @@ let collectables = [];
 let speedMultiplier = 1; // 1 = normal speed, <1 = slowed
 let maxEnemies = 10;
 let numPortals = 4;
+let weaponDamage = 25;
 
 // Create bullet pool (Boss)
 const MAX_BOSS_BULLETS = 20;
-for (let i = 0; i < MAX_BOSS_BULLETS; i++) {
-    bossBullets.push(new Bullet())
+const MAX_BULLETS = 30;
+
+function poolInit(pool, maxBullets = MAX_BULLETS) {
+    for (let i = 0; i < maxBullets; i++) {
+        pool.push(new Bullet())
+    }
 }
 
-// Create bullet pool (Player)
-const MAX_BULLETS = 30;
-for (let i=0; i<MAX_BULLETS; i++) bulletPool.push(new Bullet());
+
 
 // Input (only in browser)
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
@@ -912,6 +1038,10 @@ function removeEnemy(i) {
 }
 
 function initGame() {
+    setParams();
+    poolInit(bulletPool);
+    poolInit(bossBullets, MAX_BOSS_BULLETS);
+
     // Spawn 3 portals initially
     for (let i=0; i<numPortals; i++) {
         const type = 1;
@@ -949,18 +1079,27 @@ function update() {
                         score += e.award; 
                         removeEnemy(ei); 
 
-                        // Spawn a random collectible at enemy's position
-                        const types = ["health", "berserk", "score", "speed", "ignite", "slowdown"];
-                        if (Math.random() < 0.2) { // 30% chance to drop
-                            let type = null
-                            if (player.health < 30){
-                                type = types[0];
+                        // Usage in drop logic
+                        if (Math.random() < 0.2) { // base chance to drop
+                            let type = null;
+
+                            if (player.health < 30) {
+                                type = "health"; // always drop health if low
+                            } else {
+                                type = pickWeightedItem(rarities);
                             }
-                            else{
-                                type = types[Math.floor(Math.random() * types.length)];
-                            }
-                            spawnCollectable(type, e.x + e.width/2 - 20, e.y + e.height/2 - 20);
+                            spawnCollectable(type, e.x + e.width / 2 - 20, e.y + e.height / 2 - 20);
                         }
+                        // if (Math.random() < 0.2*rarity) { // 30% chance to drop
+                        //     let type = null
+                        //     if (player.health < 30){
+                        //         type = types[0];
+                        //     }
+                        //     else{
+                        //         type = types[Math.floor(Math.random() * types.length)];
+                        //     }
+                        //     spawnCollectable(type, e.x + e.width/2 - 20, e.y + e.height/2 - 20);
+                        // }
                         break; 
                     }
                 }

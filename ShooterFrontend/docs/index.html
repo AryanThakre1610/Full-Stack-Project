@@ -13,6 +13,7 @@
         <div class="hud">
             <span>💰 Score: <span id="score">0</span></span>
             <span>❤️ HP: <span id="playerHealth">100</span></span>
+            <span>💵 Cash: <span id="playerCash">1000</span></span>
             <button id="logoutBtn">Logout</button>
         </div>
     </div>
@@ -23,6 +24,10 @@
         <div class="character-list" id="characterList">
             <!-- Characters inserted dynamically -->
         </div>
+        <div class="inventory-container" id="inventoryContainer" style="display:none;">
+            <button id="inventoryBtn">Check Inventory</button>
+        </div>
+
         <button class="btn-start" id="startGameBtn" disabled>Start Game</button>
 
         <!-- LEADERBOARD -->
@@ -75,6 +80,16 @@
             <button class="btn-restart" id="restartBtn">Restart</button>
         </div>
     </div>
+
+    <!-- INVENTORY MODAL -->
+    <div class="modal" id="inventoryModal" style="display:none;">
+        <div class="modal-content inventory-card">
+            <span class="close">&times;</span>
+            <h3>Inventory</h3>
+            <div id="inventoryList" class="inventory-items"></div>
+        </div>
+    </div>
+
 
     <script src="game.js"></script>
 </body>

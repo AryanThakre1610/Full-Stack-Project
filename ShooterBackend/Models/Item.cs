@@ -6,8 +6,7 @@ namespace ShooterBackend.Models
         public double Value { get; set; }
 
         public Item() : base() { }
-
-        public Item(string name, string category, int power, double value)
+        public Item(string name, int power, double value)
             : base(name)
         {
             Power = power;
