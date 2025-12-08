@@ -1,62 +1,150 @@
-# ShooterBackend
+# ShootERS
 
-A C# Console Application for Video Game Data Management
+![alt text](image.png)
 
-## Overview
-ShooterBackend is a modular backend system for managing and analyzing data for a video game catalog. It supports inventory, character, weapon, and power-up management, and provides analytics via a menu-driven console interface. The project demonstrates OOP principles (interfaces, inheritance, composition) and LINQ-based data analysis.
+![alt text](image-2.png)
+
+![alt text](image-1.png)
+
+![alt text](image-3.png)
+
+![alt text](image-4.png)
+
+![alt text](image-5.png)
+
+![alt text](image-6.png)
+
+![alt text](image-7.png)
+
+**ShootERS** is a fast-paced browser-based 2D shooter game where the player battles waves of enemies, navigates portals, collects power-ups, and faces a formidable final boss. The game is built using vanilla JavaScript and HTML5 Canvas, featuring dynamic enemy behavior, collectible items, and a scoring system.
+
+---
+
+## Table of Contents
+
+- [Gameplay](#gameplay)  
+- [Features](#features)  
+- [Installation](#installation)  
+- [Controls](#controls)  
+- [Assets](#assets)  
+- [Game Mechanics](#game-mechanics)  
+- [Score Saving](#score-saving)  
+- [Testing](#testing)  
+- [License](#license)  
+
+---
+
+## Gameplay
+
+Players control a character that can move in all directions and shoot bullets. The objective is to:
+
+1. Defeat waves of enemies spawned from portals.  
+2. Collect power-ups and boosts to enhance abilities.  
+3. Survive until the final boss appears and defeat it.  
+
+Enemies vary in speed, health, and movement patterns. Strategic use of power-ups like **berserk**, **speed boost**, and **ignite** is crucial for success.
+
+---
 
 ## Features
-- **Game Entity Management:** CRUD operations for items, characters, weapons, and power-ups
-- **Random Data Generation:** Populate inventories with sample data for testing
-- **Data Analytics:** View statistics and summaries using LINQ queries
-- **Menu System:** User-friendly console navigation
-- **OOP Design:** Interfaces, abstract classes, and composition for extensibility
 
-## Project Structure
-```
-ShooterBackend/
-├── Models/         # Entity classes (GameItem, Character, Weapon, PowerUp, etc.)
-├── Managers/       # Inventory and management logic
-├── Services/       # Analytics and business logic
-├── Utils/          # Random data generation
-├── Program.cs      # Main entry point and menu system
-├── README.md       # Project documentation
-```
+- **Dynamic enemy movement** – sinusoidal and aggressive patterns.  
+- **Final boss** with unique charge attacks, shooting, and a death animation.  
+- **Collectables** – health, berserk mode, score multipliers, speed boosts, and slowdown effects.  
+- **Scoring system** – earn points for defeating enemies and destroying portals.  
+- **Responsive canvas** – adjusts to window size dynamically.  
+- **Bullet pooling** – optimized for performance during heavy combat.  
+- **Victory and Game Over screens** – display score and save it online if logged in.  
 
+---
 
-## Getting Started
+## Installation
 
-### Prerequisites
-- [.NET 10 SDK](https://dotnet.microsoft.com/download) must be installed on your system.
+1. Clone the repository:
 
-### Clone the Repository
-Clone the project to your local machine:
-```powershell
-git clone <your-repo-url>
-cd ShooterBackend
+```bash
+git clone https://github.com/yourusername/shooters-game.git
+cd shooters-game
 ```
 
-### Build the Project
-```powershell
+2. You must have dotnet v10 installed in your local system. Check the installed version:
+
+```
+dotnet --version
+```
+
+3. Create a database instance on SQL Server (Express) and add an appsettings.json file in the ShooteBackend folder with appropriate fields.
+
+4. After cloning the repo to local, open a terimnal in the ShooterBackend folder and run the following commands:
+
+```
 dotnet build
 ```
 
-### Run the Application
-```powershell
+```
 dotnet run
 ```
+This will start the server on your localhost.
 
-### Usage
-Follow the console menu to:
-- Manage items, characters, weapons, and power-ups
-- Generate random data
-- View analytics and statistics
+5. Run the DDL script on your database to seed initial data (role,characters,etc.)
+
+6. While the dotnet server is running, go to the frontend folder, you will find an index.html file.
+
+7. Open this file on your localhost or via VS Code (Live Server).
+
+NOTE : If you are opening html on a separate server, make sure to add the localhost url in the Program.cs file (Backend) under the CORS policy list.
 
 
-## Extending the Project
-- Add new entity types by creating new model classes
-- Extend analytics by adding new LINQ queries in Services
-- Enhance inventory logic in Managers
+## Controls
 
-## License
-This project is for educational purposes.
+- **Move**: Arrow keys or W, A, S, D
+
+- **Shoot**: Left-Click Mouse
+
+- **Restart**: Ctrl+R
+
+## Assets
+
+- Character sprites
+
+- Enemy sprites
+
+- Bullet and projectile effects
+
+- Background images and tiles
+
+- Power-up icons
+
+- Portal animations
+
+- Boss sprites and effects
+
+All assets are included in the assets/ folder.
+
+## Game Mechanics
+
+- **Portals**: Spawn enemies at intervals, increasing difficulty each wave.
+
+- **Power-ups**: Temporary boosts or effects, e.g., faster shooting, double damage, speed.
+
+- **Boss Fight**: Appears after a set number of waves; has multiple attack patterns.
+
+- **Score Calculation**: Points are earned from defeating enemies, destroying portals, and collecting power-ups.
+
+- **Victory Conditions**: Defeat the boss.
+
+- **Game Over Conditions**: Player loses all health points.
+
+## Demo
+
+Not currently available
+
+## Score Saving
+
+- Scores are saved online if the player is logged in.
+
+- New users must register and then log in before starting the game.
+
+- High scores are updated only if the new score is higher than the previous one.
+
+- JWT authentication ensures each score is tied to the correct user.
