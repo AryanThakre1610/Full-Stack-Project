@@ -2,7 +2,7 @@
 // BACKEND CRUD INTEGRATION
 // =======================
 let playerCharacter = null;
-let playerCharacterId = null; // will store after login
+let playerCharacterId = null;
 let currentUserId = null;
 const API_BASE = "http://localhost:5000/api";
 
@@ -1077,16 +1077,6 @@ function update() {
                             }
                             spawnCollectable(type, e.x + e.width / 2 - 20, e.y + e.height / 2 - 20);
                         }
-                        // if (Math.random() < 0.2*rarity) { // 30% chance to drop
-                        //     let type = null
-                        //     if (player.health < 30){
-                        //         type = types[0];
-                        //     }
-                        //     else{
-                        //         type = types[Math.floor(Math.random() * types.length)];
-                        //     }
-                        //     spawnCollectable(type, e.x + e.width/2 - 20, e.y + e.height/2 - 20);
-                        // }
                         break; 
                     }
                 }
