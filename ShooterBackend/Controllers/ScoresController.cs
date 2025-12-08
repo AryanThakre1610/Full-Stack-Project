@@ -45,7 +45,6 @@ namespace ShooterBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<Score>> CreateScore(ScoreCreateDto dto)
         {
-            // var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var userId = dto.UserId;
             var existingScore = await _context.Scores.FirstOrDefaultAsync(s => s.UserId == userId);
 
