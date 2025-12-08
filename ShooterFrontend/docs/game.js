@@ -3,6 +3,7 @@
 // =======================
 let playerCharacter = null;
 let playerCharacterId = null; // will store after login
+let currentUserId = null;
 const API_BASE = "http://localhost:5000/api";
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -19,10 +20,10 @@ window.addEventListener("DOMContentLoaded", async () => {
             showHomeScreen();
         } catch (err) {
             console.error("Error restoring session:", err);
-            showAuthModal(); // fallback to login if something goes wrong
+            showAuthModal(); // fallback to login
         }
     } else {
-        showAuthModal(); // no token, show login
+        showAuthModal();
     }
 });
     
@@ -50,13 +51,12 @@ async function startGame() {
         return;
     }
 
-    // player.health = playerCharacter.health;
     // Load assets first
     await loadAssets();
 }
 
 let characters = []; // Will store characters fetched from API
-let items = []; // Will store items fetched from API
+let items = []; // Will store global items fetched from API
 let inventory = []; // Will store weapons for selected character
 const inventoryModal = document.getElementById("inventoryModal");
 const inventoryList = document.getElementById("inventoryList");
@@ -71,7 +71,7 @@ async function fetchCharacters() {
     try {
         const res = await fetch(`${API_BASE}/characters`);
         if (!res.ok) throw new Error("Failed to fetch characters");
-        characters = await res.json(); // Array of character objects
+        characters = await res.json();
     } catch (err) {
         console.error(err);
         alert("Error fetching characters: " + err.message);
@@ -136,7 +136,6 @@ async function showHomeScreen() {
             playerCharacterId = char.id;
             fetchInventory(playerCharacterId);
 
-            // Clear selection for all cards
             document.querySelectorAll(".character-card").forEach(c => {
                 c.classList.remove("selected");
                 const btn = c.querySelector(".inventoryBtn");
@@ -152,9 +151,8 @@ async function showHomeScreen() {
             inventoryBtn.classList.add("inventoryBtn");
 
             inventoryBtn.addEventListener("click", async (e) => {
-                e.stopPropagation(); // Prevent card click from firing
+                e.stopPropagation();
 
-                // Populate modal with inventory items
                 inventoryList.innerHTML = inventory.map(item => `
                     <div class="inventory-item">
                         <strong>${item.name}</strong> (${item.type})<br>
@@ -190,9 +188,9 @@ async function loadScoreCard() {
             return;
         }
 
-        const scores = await response.json(); // array of {user:{username}, value}
+        const scores = await response.json();
         const tbody = document.querySelector("#scoreCard tbody");
-        tbody.innerHTML = ""; // clear previous rows
+        tbody.innerHTML = "";
 
         scores.forEach((score, index) => {
             const tr = document.createElement("tr");
@@ -238,7 +236,7 @@ function logout() {
     // Clear JWT from localStorage
     localStorage.removeItem("token");
 
-    // Optionally, clear any other game state if needed
+    // Clear any other game state
     localStorage.removeItem("playerCharacterId");
     localStorage.removeItem("score");
 
@@ -251,12 +249,8 @@ function logout() {
     showAuthModal();
 }
 
-// Attach logout to button
 document.getElementById("logoutBtn").addEventListener("click", logout);
-
 document.getElementById("playerCash").addEventListener("click", logout);
-
-const playerCash = document.getElementById("playerCash");
 
 async function login(username, password) {
     try {
@@ -271,9 +265,11 @@ async function login(username, password) {
 
         const jsonData = JSON.parse(data);
 
-        // Save token
         localStorage.setItem("token", jsonData.token);
         jwtToken = jsonData.token;
+        
+        claims = parseJwt(jwtToken);
+        currentUserId = claims["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
     
         hideAuthModal();
 
@@ -298,7 +294,6 @@ async function register(username, email, password) {
             document.getElementById("authError").innerText = 
                 "Registration successful! Please login.";
         } else {
-            // Backend sends plain text error
             const errorText = await res.text();
             document.getElementById("authError").innerText = errorText || "Registration failed.";
         }
@@ -310,7 +305,6 @@ async function register(username, email, password) {
 
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-    // Attach event listeners for auth forms
     document.getElementById("loginForm").onsubmit = function(e) {
         e.preventDefault();
         login(
@@ -329,12 +323,12 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
 
 }
 
-function setParams() {  
+function setParams() {
+    // Set player stats 
     player.health = playerCharacter.health;
     player.maxHealth = playerCharacter.health;
 
     jsoninventory = inventory[0];
-    console.log(inventory[0])
     weaponDamage = jsoninventory.power;
     weaponValue = jsoninventory.value;
     
@@ -344,9 +338,6 @@ function setParams() {
         damageValues[pname] = power.damage;
         effectValues[pname] = power.effect;
     }
-
-    console.log(damageValues);
-    console.log(effectValues);
 }
 
 // Pick item weighted by rarity value (higher = more common)
@@ -375,7 +366,6 @@ function pickWeightedItem(rarities) {
 
 
 let playerImg, fishMonster, snakeMonster, lizardMonster, bgImg, portalImg, bossImg, healthImg, berserkImg, scoreImg, speedImg, igniteImg, slowdownImg;
-let shootSound, bgMusic;
 
 // Only define canvas and context if running in a browser
 let canvas, ctx;
@@ -802,10 +792,7 @@ class Boss {
                 // if (this.x > 0)
                 this.x += this.chargeDirection * this.chargeSpeed;
                 this.chargeTimer--;
-                if (this.x < player.x + player.width &&
-                    this.x + this.width > player.x &&
-                    this.y < player.y + player.height &&
-                    this.y + this.height > player.y) {
+                if (checkCollision(this,player)) {
                     // Apply damage
                     player.health -= 1;
                 }
