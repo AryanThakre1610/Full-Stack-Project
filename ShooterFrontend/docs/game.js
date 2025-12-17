@@ -11,12 +11,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (storedToken) {
         jwtToken = storedToken;
         try {
-            // Optionally fetch characters if needed
             claims = parseJwt(jwtToken);
             currentUserId = claims["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
 
             hideAuthModal();
-            await fetchCharacters();
+            await fetchEntities();
             showHomeScreen();
         } catch (err) {
             console.error("Error restoring session:", err);
@@ -44,8 +43,14 @@ function parseJwt(token) {
     }
 }
 
+async function fetchEntities() {
+    await fetchCharacters();
+    await fetchPowerups();
+    await loadScoreCard();
+}
+
 async function startGame() {
-    if (!jwtToken || !playerCharacterId) {
+    if (!jwtToken || !currentUserId) {
         console.warn("Cannot start game: Not logged in or character ID missing");
         showAuthModal();
         return;
@@ -57,12 +62,26 @@ async function startGame() {
 
 let characters = []; // Will store characters fetched from API
 let items = []; // Will store global items fetched from API
+let scores = []; // Will store scores fetched from API
 let inventory = []; // Will store weapons for selected character
 const inventoryModal = document.getElementById("inventoryModal");
 const inventoryList = document.getElementById("inventoryList");
 const rarities = {};
 const damageValues = {};
 const effectValues = {};
+const profileBtn = document.getElementById("profileBtn");
+const profileDropdown = document.getElementById("profileDropdown");
+
+profileBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    profileDropdown.style.display =
+        profileDropdown.style.display === "flex" ? "none" : "flex";
+});
+
+document.addEventListener("click", () => {
+    profileDropdown.style.display = "none";
+});
+
 
 // --------------------
 // Fetch Data Functions
@@ -108,16 +127,17 @@ async function fetchInventory(characterId) {
 async function showHomeScreen() {
     document.getElementById("homeScreen").style.display = "block";
     const characterListDiv = document.getElementById("characterList");
+    const profileUsername = document.getElementById("profileUsername");
     characterListDiv.innerHTML = "";
-
-    await fetchCharacters();
-    await fetchPowerups();
-    await loadScoreCard();
+    profileUsername.textContent = claims["sub"] || "Guest";
+    // await fetchCharacters();
+    // await fetchPowerups();
+    // await loadScoreCard();
 
     characters.forEach(char => {
         const card = document.createElement("div");
         card.classList.add("character-card");
-
+        card.disabled = true;
         // Character Name
         const name = document.createElement("div");
         name.classList.add("character-name");
@@ -188,7 +208,7 @@ async function loadScoreCard() {
             return;
         }
 
-        const scores = await response.json();
+        scores = await response.json();
         const tbody = document.querySelector("#scoreCard tbody");
         tbody.innerHTML = "";
 
@@ -272,14 +292,13 @@ async function login(username, password) {
         currentUserId = claims["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
     
         hideAuthModal();
-
+        await fetchEntities();
         showHomeScreen();
 
     } catch (err) {
         document.getElementById("authError").innerText = err.message;
     }
 }
-
 
 async function register(username, email, password) {
     try {
@@ -290,7 +309,6 @@ async function register(username, email, password) {
         });
 
         if (res.ok) {
-            // Registration successful
             document.getElementById("authError").innerText = 
                 "Registration successful! Please login.";
         } else {
@@ -342,32 +360,29 @@ function setParams() {
 
 // Pick item weighted by rarity value (higher = more common)
 function pickWeightedItem(rarities) {
-    const items = Object.keys(rarities);
-    const weights = Object.values(rarities);
+    console.log(rarities);
 
-    // Compute cumulative weights
-    const cumulative = [];
-    let sum = 0;
-    for (let w of weights) {
-        sum += w;
-        cumulative.push(sum);
+    var len = (Object.keys(rarities)).length;
+    console.log(len);
+
+    var prob = Math.random();
+    var fair_prob = 1/len;
+    var rar = 0; 
+    for (item in rarities) {
+        rar = Number(rarities[item]);
+        console.log(fair_prob*rar);
+        if (prob > fair_prob*rar) {
+            console.log("enter");
+            return item;
+        }
     }
-
-    // Pick a random number between 0 and sum
-    const rnd = Math.random() * sum;
-
-    // Find the first cumulative weight that exceeds rnd
-    for (let i = 0; i < cumulative.length; i++) {
-        if (rnd < cumulative[i]) return items[i];
-    }
-
-    return items[items.length - 1]; // fallback
+    console.log("fallback");
+    return rarities[len - 1]; // fallback
 }
 
 
 let playerImg, fishMonster, snakeMonster, lizardMonster, bgImg, portalImg, bossImg, healthImg, berserkImg, scoreImg, speedImg, igniteImg, slowdownImg;
 
-// Only define canvas and context if running in a browser
 let canvas, ctx;
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     canvas = document.getElementById("gameCanvas");
@@ -446,7 +461,6 @@ async function saveScore(scoreValue) {
             return;
         }
 
-        // const savedScore = await response.json();
         console.log("Score saved successfully");
 
     } catch (err) {
@@ -496,7 +510,7 @@ function endGame(isVictory = false) {
 // =======================
 class Player {
     constructor() {
-        // Provide fallback for test environment
+        // Provide fallback
         const defaultHeight = 600;
         this.x = 40;
         this.y = (typeof canvas !== 'undefined' && canvas && canvas.height ? canvas.height : defaultHeight) / 2 - 60;
@@ -562,7 +576,7 @@ class Player {
 // =======================
 class Enemy {
     constructor(type = 1) {
-        // Provide fallback for test environment
+        // Provide fallback
         const defaultWidth = 800;
         const defaultHeight = 600;
         this.type = type;
@@ -608,7 +622,6 @@ class Enemy {
         // sinusoidal vertical movement
         this.y = this.baseY + Math.sin(Date.now() * this.waveFrequency + this.waveOffset) * this.waveAmplitude;
 
-        // optional: remove if enemy goes off screen to the left
         if (this.x + this.width < 0) {
             this.x = canvas.width + Math.random() * 200;
             this.baseY = Math.random() * (canvas.height - this.height);
@@ -660,10 +673,10 @@ class Bullet {
 // =======================
 class Portal {
     constructor(type = 1, index = 0, totalPortals = 3, enemiesArray = null) {
-        // Provide fallback for test environment
+        // Provide fallback
         const defaultWidth = 800;
         const defaultHeight = 600;
-        this.type = type; // portal image type
+        this.type = type;
         this.width = 100;
         this.height = 100;
         const cWidth = (typeof canvas !== 'undefined' && canvas && canvas.width ? canvas.width : defaultWidth);
@@ -709,7 +722,7 @@ class Portal {
 // =======================
 class Boss {
     constructor() {
-        // Provide fallback for test environment
+        // Provide fallback
         const defaultWidth = 800;
         const defaultHeight = 600;
         this.width = 200;
@@ -865,7 +878,7 @@ class Collectable {
         this.y = y !== null ? y : Math.random() * (canvas.height - this.height);
         this.active = true;
         this.duration = 600; // lasts for 10 seconds
-        this.bobOffset = Math.random() * 100; // random phase for smooth bobbing
+        this.bobOffset = Math.random() * 100;
     }
 
     draw() {
@@ -1191,7 +1204,6 @@ function gameLoop() {
     draw();
     if (!gameOver) requestAnimationFrame(gameLoop);
 }
-
 
 // Start loading assets only in browser
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
