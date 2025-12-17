@@ -10,13 +10,29 @@
     <!-- TOP BAR / HUD -->
     <div id="topBar">
         <h1 class="title">ShootERS</h1>
+
         <div class="hud">
             <span>💰 Score: <span id="score">0</span></span>
             <span>❤️ HP: <span id="playerHealth">100</span></span>
             <span>💵 Cash: <span id="playerCash">1000</span></span>
-            <button id="logoutBtn">Logout</button>
+        </div>
+
+        <!-- PROFILE BUTTON -->
+        <div class="profile-container">
+            <button id="profileBtn">
+                <img src="./assets/img/avatar.png" alt="Profile" class="profile-avatar">
+                <span id="profileUsername">Guest</span>
+            </button>
+
+            <!-- DROPDOWN -->
+            <div class="profile-dropdown" id="profileDropdown">
+                <button id="viewProfileBtn">👤 Profile</button>
+                <button id="inventoryProfileBtn">🎒 Inventory</button>
+                <button id="logoutBtn">🚪 Logout</button>
+            </div>
         </div>
     </div>
+
 
     <!-- HOME SCREEN -->
     <div class="home-screen" id="homeScreen">
