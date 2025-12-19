@@ -9,7 +9,8 @@ namespace ShooterBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    // [Microsoft.AspNetCore.Authorization.Authorize]
+    // [Microsoft.AspNetCore.Authorization.Autho
+    // rize]
     public class CharactersController : ControllerBase
     {
         private readonly GameDbContext _context;

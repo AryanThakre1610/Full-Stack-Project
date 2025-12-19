@@ -4,22 +4,27 @@
 let playerCharacter = null;
 let playerCharacterId = null; // will store after login
 let currentUserId = null;
+let currentUser = null;
 const API_BASE = "http://localhost:5000/api";
+let jwtToken = null;
 
 window.addEventListener("DOMContentLoaded", async () => {
     const storedToken = localStorage.getItem("token");
-    if (storedToken) {
+    if (isJwtValid(storedToken)) {
+        showLoading("Restoring session...");
+        hideAuthModal();
         jwtToken = storedToken;
+        currentUserId = claims["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
         try {
-            claims = parseJwt(jwtToken);
-            currentUserId = claims["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
-
-            hideAuthModal();
+            await fetchUserContext();
             await fetchEntities();
             showHomeScreen();
         } catch (err) {
             console.error("Error restoring session:", err);
             showAuthModal(); // fallback to login
+        }
+        finally {
+            hideLoading();
         }
     } else {
         showAuthModal();
@@ -43,6 +48,14 @@ function parseJwt(token) {
     }
 }
 
+function isJwtValid(token) {
+    if (!token) return false;
+    claims = parseJwt(token);
+    if (!claims || !claims.exp) return false;
+    const now = Math.floor(Date.now() / 1000);
+    return now < claims.exp;
+}
+
 async function fetchEntities() {
     await fetchCharacters();
     await fetchPowerups();
@@ -60,10 +73,21 @@ async function startGame() {
     await loadAssets();
 }
 
+function showLoading(text = "Loading...") {
+    const overlay = document.getElementById("loadingOverlay");
+    overlay.querySelector("p").innerText = text;
+    overlay.style.display = "flex";
+}
+
+function hideLoading() {
+    document.getElementById("loadingOverlay").style.display = "none";
+}
+
 let characters = []; // Will store characters fetched from API
 let items = []; // Will store global items fetched from API
 let scores = []; // Will store scores fetched from API
 let inventory = []; // Will store weapons for selected character
+let userScore = 0;
 const inventoryModal = document.getElementById("inventoryModal");
 const inventoryList = document.getElementById("inventoryList");
 const rarities = {};
@@ -71,6 +95,27 @@ const damageValues = {};
 const effectValues = {};
 const profileBtn = document.getElementById("profileBtn");
 const profileDropdown = document.getElementById("profileDropdown");
+const profileModal = document.getElementById("profileModal");
+const closeProfileBtn = document.getElementById("closeProfile");
+const helpBtn = document.getElementById("helpBtn");
+const helpModal = document.getElementById("helpModal");
+const closeHelp = document.getElementById("closeHelp");
+
+helpBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    helpModal.style.display = "flex";
+});
+
+closeHelp.addEventListener("click", () => {
+    helpModal.style.display = "none";
+});
+
+// Optional: close when clicking outside
+helpModal.addEventListener("click", (e) => {
+    if (e.target === helpModal) {
+        helpModal.style.display = "none";
+    }
+});
 
 profileBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -82,6 +127,49 @@ document.addEventListener("click", () => {
     profileDropdown.style.display = "none";
 });
 
+document.getElementById("viewProfileBtn").addEventListener("click", async () => {
+    profileDropdown.style.display = "none";
+    showLoading("Loading profile...");
+    await openProfilePage();
+    hideLoading();
+});
+
+closeProfileBtn.addEventListener("click", () => {
+    profileModal.style.display = "none";
+});
+
+window.addEventListener("click", (e) => {
+    if (e.target === profileModal) profileModal.style.display = "none";
+});
+
+async function openProfilePage() {
+    if (!currentUser) return;
+
+    // Basic info
+    document.getElementById("profilePageUsername").innerText = currentUser.username;
+    document.getElementById("profilePageEmail").innerText = currentUser.email;
+    document.getElementById("profilePageCash").innerText = currentUser.cash;
+
+    // Total score (sum or max, adjust as needed)
+    const totalScore = userScore
+    document.getElementById("profilePageScore").innerText = totalScore;
+
+    // Characters
+    // const container = document.getElementById("profileCharacters");
+    // container.innerHTML = "";
+
+    // characters.forEach(char => {
+    //     const div = document.createElement("div");
+    //     div.className = "profile-character-item";
+    //     div.innerHTML = `
+    //         <strong>${char.name}</strong><br>
+    //         Level: ${char.level} | HP: ${char.health}
+    //     `;
+    //     container.appendChild(div);
+    // });
+
+    profileModal.style.display = "flex";
+}
 
 // --------------------
 // Fetch Data Functions
@@ -125,9 +213,12 @@ async function fetchInventory(characterId) {
 // Display Home Screen
 // --------------------
 async function showHomeScreen() {
-    document.getElementById("homeScreen").style.display = "block";
+    document.getElementById("homeScreen").style.display = "block";    
     const characterListDiv = document.getElementById("characterList");
     const profileUsername = document.getElementById("profileUsername");
+
+    const cashEl = document.getElementById("playerCash");
+    if (cashEl) cashEl.textContent = currentUser.cash;
     characterListDiv.innerHTML = "";
     profileUsername.textContent = claims["sub"] || "Guest";
     // await fetchCharacters();
@@ -145,10 +236,25 @@ async function showHomeScreen() {
         card.appendChild(name);
 
         // Character Stats
+        const mul = 3 * ( 1 / char.level );
         const stats = document.createElement("div");
         stats.classList.add("character-stats");
-        stats.innerHTML = `<div>LEVEL: ${char.level}</div><div>HP: ${char.health}</div>`;
-        card.appendChild(stats);
+        // stats.innerHTML = `<div>RANK: ${char.level}</div><div>HP: ${char.health}</div><div>MULTIPLIER: ${mul.toFixed(2)}</div>`;
+        stats.innerHTML = `
+                                <div class="stat">
+                                    <span class="stat-label">Rank</span>
+                                    <span class="stat-value">${char.level}</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">HP</span>
+                                    <span class="stat-value">${char.health}</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Multiplier</span>
+                                    <span class="stat-value">x${mul.toFixed(2)}</span>
+                                </div>
+                                `;
+card.appendChild(stats);
 
         // Card click - select character
         card.addEventListener("click", () => {
@@ -220,8 +326,11 @@ async function loadScoreCard() {
                 <td style="padding:8px; border:1px solid #555;">${score.value}</td>
             `;
             tbody.appendChild(tr);
+            
+            if (score.user.username == currentUser.username) {
+                userScore = score.value;
+            }
         });
-
     } catch (err) {
         console.error("Error loading scorecard:", err);
     }
@@ -270,9 +379,24 @@ function logout() {
 }
 
 document.getElementById("logoutBtn").addEventListener("click", logout);
-document.getElementById("playerCash").addEventListener("click", logout);
+
+async function fetchUserContext(){
+    try {
+        const userRes = await fetch(`${API_BASE}/users/${currentUserId}`, {
+            headers: { "Authorization": `Bearer ${jwtToken}` }
+        });
+
+        if (!userRes.ok) throw new Error("Failed to fetch user context");
+        const userContext = await userRes.json();
+
+        currentUser = userContext;
+    } catch (err) {
+        console.error("Error fetching user context:", err);
+    }
+}
 
 async function login(username, password) {
+    showLoading("Logging in...");
     try {
         const res = await fetch(`${API_BASE}/auth/login`, {
             method: "POST",
@@ -287,16 +411,21 @@ async function login(username, password) {
 
         localStorage.setItem("token", jsonData.token);
         jwtToken = jsonData.token;
-        
+
+
         claims = parseJwt(jwtToken);
         currentUserId = claims["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
-    
-        hideAuthModal();
+
+        await fetchUserContext();
         await fetchEntities();
+        hideAuthModal();
         showHomeScreen();
 
     } catch (err) {
         document.getElementById("authError").innerText = err.message;
+    }
+    finally {
+        hideLoading();
     }
 }
 
@@ -349,6 +478,8 @@ function setParams() {
     jsoninventory = inventory[0];
     weaponDamage = jsoninventory.power;
     weaponValue = jsoninventory.value;
+
+    scoreMultiplier = 3 * ( 1 / playerCharacter.level );
     
     for (let power of items) {
         pname = power.name.toLowerCase();
@@ -585,9 +716,9 @@ class Enemy {
         this.x = (typeof canvas !== 'undefined' && canvas && canvas.width ? canvas.width : defaultWidth) + 50;
         this.y = Math.random() * ((typeof canvas !== 'undefined' && canvas && canvas.height ? canvas.height : defaultHeight) - this.height);
 
-        if (type === 1) { this.baseSpeed = 4; this.health = 50; this.award = 10; }
-        else if (type === 2) { this.baseSpeed = 2; this.health = 90; this.award = 30; }
-        else { this.baseSpeed = 6; this.health = 40; this.award = 20; }
+        if (type === 1) { this.baseSpeed = 4; this.health = 50; this.award = Math.floor(10 * scoreMultiplier); }
+        else if (type === 2) { this.baseSpeed = 2; this.health = 90; this.award = Math.floor(30 * scoreMultiplier); }
+        else { this.baseSpeed = 6; this.health = 40; this.award = Math.floor(20 * scoreMultiplier); }
 
         this.maxHealth = this.health;
         this.direction = 1;
@@ -972,6 +1103,7 @@ let speedMultiplier = 1; // 1 = normal speed, <1 = slowed
 let maxEnemies = 10;
 let numPortals = 4;
 let weaponDamage = 25;
+let scoreMultiplier = 1;
 
 // Create bullet pool (Boss)
 const MAX_BOSS_BULLETS = 20;
