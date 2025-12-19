@@ -19,17 +19,18 @@
 
         <!-- PROFILE BUTTON -->
         <div class="profile-container">
-            <button id="profileBtn">
+            <button id="profileBtn">    
                 <img src="./assets/img/avatar.png" alt="Profile" class="profile-avatar">
                 <span id="profileUsername">Guest</span>
             </button>
 
+
             <!-- DROPDOWN -->
             <div class="profile-dropdown" id="profileDropdown">
                 <button id="viewProfileBtn">👤 Profile</button>
-                <button id="inventoryProfileBtn">🎒 Inventory</button>
                 <button id="logoutBtn">🚪 Logout</button>
             </div>
+            <button id="helpBtn" class="help-btn" aria-label="Game Help">?</button>
         </div>
     </div>
 
@@ -48,18 +49,20 @@
 
         <!-- LEADERBOARD -->
         <div class="scorecard-container">
-            <table class="scorecard-table" id="scoreCard">
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Username</th>
-                        <th>Score</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Scores will be dynamically inserted here -->
-                </tbody>
-            </table>
+            <div class="scorecard-scroll">
+                <table class="scorecard-table" id="scoreCard">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Username</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Scores will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -106,6 +109,60 @@
         </div>
     </div>
 
+    <!-- USER PROFILE MODAL -->
+    <div class="modal" id="profileModal" style="display:none;">
+        <div class="modal-content profile-card">
+            <span class="close" id="closeProfile">&times;</span>
+
+            <h2>👤 User Profile</h2>
+
+            <div class="profile-info">
+                <p><strong>Username:</strong> <span id="profilePageUsername"></span></p>
+                <p><strong>Email:</strong> <span id="profilePageEmail"></span></p>
+                <p><strong>Cash:</strong> 💵 <span id="profilePageCash"></span></p>
+                <p><strong>Total Score:</strong> ⭐ <span id="profilePageScore"></span></p>
+            </div>
+
+            <!-- <hr> -->
+
+            <!-- <h3>Your Characters</h3>
+            <div id="profileCharacters" class="profile-character-list"></div> -->
+        </div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+        <div class="loading-box">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
+    <div class="modal" id="helpModal" style="display:none;">
+        <div class="modal-content help-card">
+            <span class="close" id="closeHelp">&times;</span>
+
+            <h2>❓ Help</h2>
+
+            <div class="help-section">
+                <h4>🎮 Gameplay</h4>
+                <p>Shoot enemies, survive as long as possible, and increase your score.</p>
+            </div>
+
+            <div class="help-section">
+                <h4>🧍 Characters</h4>
+                <p>Each character has a <strong>Rank</strong>, <strong>HP</strong>, and <strong>Multiplier</strong> that affects scoring.</p>
+            </div>
+            <div class="help-section">
+                <h4>🎒 Inventory</h4>
+                <p>Items boost your power, damage, or survivability during the game.</p>
+            </div>
+
+            <div class="help-section">
+                <h4>🏆 Leaderboard</h4>
+                <p>Compete with other players and climb the rankings.</p>
+            </div>
+        </div>
+    </div>
 
     <script src="game.js"></script>
 </body>

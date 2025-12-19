@@ -8,7 +8,7 @@ namespace ShooterBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly GameDbContext _context;
